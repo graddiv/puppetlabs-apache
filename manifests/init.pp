@@ -16,7 +16,8 @@ class apache (
   $default_mods = true,
   $service_enable = true,
   $serveradmin  = 'root@localhost',
-  $sendfile     = false
+  $sendfile     = false,
+  $confFileTemplate = false
 ) {
   include apache::params
 
@@ -45,6 +46,9 @@ class apache (
   }
 
   if $apache::params::conf_dir and $apache::params::conf_file {
+    if !$confFileTemplate {
+      $confFileTemplate = "apache/${apache::params::conf_file}.erb"
+    }
     # Template uses:
     # - $apache::params::user
     # - $apache::params::group
@@ -52,7 +56,7 @@ class apache (
     # - $serveradmin
     file { "${apache::params::conf_dir}/${apache::params::conf_file}":
       ensure  => present,
-      content => template("apache/${apache::params::conf_file}.erb"),
+      content => template($confFileTemplate),
       notify  => Service['httpd'],
       require => Package['httpd'],
     }
